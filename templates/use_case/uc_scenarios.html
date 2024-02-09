@@ -1,0 +1,133 @@
+<html>
+<head>
+	<title>Use Cases</title>
+</head>
+<body>
+	<h1>Use Cases</h1>
+
+	<!-- Display existing use cases -->
+	<h2>Existing Use Cases</h2>
+	<table>
+		<tr>
+			<th>ID</th>
+			<th>Name</th>
+			<th>Description</th>
+			<th>Action</th>
+		</tr>
+		<tbody id="use-cases"></tbody>
+	</table>
+
+	<!-- Form for modifying use cases -->
+	<h2>Modify Use Case</h2>
+	<form id="modify-form">
+		<label for="modify-id">ID:</label>
+		<input type="text" id="modify-id" name="id" readonly><br>
+
+		<label for="modify-name">Name:</label>
+		<input type="text" id="modify-name" name="name" required><br>
+
+		<label for="modify-description">Description:</label>
+		<input type="text" id="modify-description" name="description" required><br>
+
+		<input type="submit" value="Save Changes">
+	</form>
+
+	<!-- Form for creating a new use case -->
+	<h2>Create Use Case</h2>
+	<form id="create-form">
+		<label for="create-name">Name:</label>
+		<input type="text" id="create-name" name="name" required><br>
+
+		<label for="create-description">Description:</label>
+		<input type="text" id="create-description" name="description" required><br>
+
+		<input type="submit" value="Create">
+	</form>
+
+	<script>
+		// Get the use cases and display them in the table
+		fetch('/api/scenarios')
+			.then(response => response.json())
+			.then(data => {
+				data.scenarios.forEach(scenario => {
+					let row = document.createElement('tr');
+
+					let idCell = document.createElement('td');
+					idCell.textContent = scenario.id;
+					row.appendChild(idCell);
+
+					let nameCell = document.createElement('td');
+					nameCell.textContent = scenario.title;
+					row.appendChild(nameCell);
+
+					let descriptionCell = document.createElement('td');
+					descriptionCell.textContent = scenario.description;
+					row.appendChild(descriptionCell);
+
+					let actionCell = document.createElement('td');
+					let editButton = document.createElement('button');
+					editButton.textContent = 'Edit';
+					editButton.onclick = () => {
+						document.getElementById('modify-id').value = scenario.id;
+						document.getElementById('modify-name').value = scenario.title;
+						document.getElementById('modify-description').value = scenario.description;
+					}
+					actionCell.appendChild(editButton);
+					row.appendChild(actionCell);
+
+					document.getElementById('use-cases').appendChild(row);
+				});
+			});
+    		// Submit the modify form
+		document.getElementById('modify-form').addEventListener('submit', event => {
+			event.preventDefault();
+
+			let id = document.getElementById('modify-id').value;
+			let name = document.getElementById('modify-name').value;
+			let description = document.getElementById('modify-description').value;
+
+			fetch(`/api/scenarios/${id}`, {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ title: name, description })
+			})
+			.then(response => response.json())
+			.then(data => {
+				alert(data.message);
+				location.reload();
+			})
+			.catch(error => {
+				console.error(error);
+				alert('An error occurred.');
+			});
+		});
+
+		// Submit the create form
+		document.getElementById('create-form').addEventListener('submit', event => {
+			event.preventDefault();
+
+			let name = document.getElementById('create-name').value;
+			let description = document.getElementById('create-description').value;
+
+			fetch('/api/scenarios', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ title: name, description })
+			})
+			.then(response => response.json())
+			.then(data => {
+				alert(data.message);
+				location.reload();
+			})
+			.catch(error => {
+				console.error(error);
+				alert('An error occurred.');
+			});
+		});
+	</script>
+</body>
+</html>

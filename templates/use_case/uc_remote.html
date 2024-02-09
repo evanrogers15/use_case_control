@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>GNS3 Use Case Control Panel</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f6f6f6;
+      color: #333333;
+      margin: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    h3 {
+      margin-bottom: 5px;
+    }
+
+    table {
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+
+    form {
+      margin-bottom: 10px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"] {
+      padding: 5px;
+      width: 200px;
+    }
+
+    button {
+      padding: 8px 12px;
+      background-color: #007bff;
+      color: #ffffff;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+<button onclick="goToMainPage()">Main Page</button>
+  <h1>GNS3 Use Case Control Panel</h1>
+  <h3>Select GNS3 Server</h3>
+  <form>
+    <label for="server">Server:</label>
+    <input type="text" id="server" name="server"><br><br>
+    <label for="port">Port:</label>
+    <input type="text" id="port" name="port"><br><br>
+    <button type="button" onclick="setServer()">Set Server</button>
+  </form>
+  <br>
+  <table id="projectTable">
+    <thead>
+      <tr>
+        <th>Project ID</th>
+        <th>Project Name</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+  <br>
+  <form>
+    <label for="projectId">Project ID:</label>
+    <input type="text" id="projectId" name="projectId"><br><br>
+    <button type="button" onclick="getScenarios()">Get Scenarios</button>
+  </form>
+  <br>
+  <table id="scenarioTable">
+    <thead>
+      <tr>
+        <th>Scenario ID</th>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+  <br>
+  <h3>Currently Running and Recently Run Scenarios</h3>
+  <table id="scenario-status">
+    <thead>
+      <tr>
+        <th>Server IP</th>
+        <th>Server Name</th>
+        <th>Project Name</th>
+        <th>Project ID</th>
+        <th>Scenario ID</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table>
+
+  <script>
+  function goToMainPage() {
+          window.location.href = "/";
+        }
+    function saveConfig(data) {
+      console.log(JSON.stringify(data));
+      return fetch(`/api/uc_config`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      })
+        .then(response => response.json())
+        .then(data => console.log(data))
+        .catch(error => console.error(error));
+    }
+    function setServer() {
+      const server = document.getElementById("server").value;
+      const port = document.getElementById("port").value;
+      saveConfig({'server_ip': server, 'server_port': port})
+        .then(() => {
+          document.getElementById("server").value = server;
+          document.getElementById("port").value = port;
+          return getProjects();
+        })
+        .catch(error => console.error(error));
+    }
+    function getProjects() {
+      const server = document.getElementById("server").value;
+      const port = document.getElementById("port").value;
+      fetch(`/api/uc_projects`)
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.querySelector("#projectTable tbody");
+          tableBody.innerHTML = "";
+          data.projects.forEach(project => {
+            const row = tableBody.insertRow();
+            const projectIdCell = row.insertCell();
+            projectIdCell.style.border = "1px solid black"; // add border around cell
+            const projectIdRadio = document.createElement("input"); // create radio button element
+            projectIdRadio.setAttribute("type", "radio"); // set type attribute to "radio"
+            projectIdRadio.setAttribute("name", "project"); // set name attribute to "project"
+            projectIdRadio.setAttribute("value", project.id); // set value attribute to project ID
+            projectIdCell.appendChild(projectIdRadio); // add radio button element to cell
+            const projectNameCell = row.insertCell();
+            projectNameCell.style.border = "1px solid black"; // add border around cell
+            const projectStatusCell = row.insertCell(); // new cell for project status
+            projectStatusCell.style.border = "1px solid black"; // add border around cell
+            projectNameCell.textContent = project.name;
+            projectStatusCell.textContent = project.status; // set cell text to project status
+            row.addEventListener("click", function() {
+              document.getElementById("projectId").value = project.id;
+            });
+          });
+        })
+        .catch(error => console.error(error));
+    }
+    function getScenarios() {
+      const server = document.getElementById("server").value;
+      const port = document.getElementById("port").value;
+      const projectId = document.getElementById("projectId").value; // get project ID
+      saveConfig({'server_ip': server, 'server_port': port, 'project_id': projectId}); // add saveConfig call
+      const scenariosUrl = `/api/uc_scenarios`;
+      fetch(scenariosUrl)
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.querySelector("#scenarioTable tbody");
+          tableBody.innerHTML = "";
+          data.scenarios.forEach(scenario => {
+            const row = tableBody.insertRow();
+            const scenarioIdCell = row.insertCell();
+            const scenarioTitleCell = row.insertCell();
+            const scenarioDescCell = row.insertCell();
+            const scenarioBtnCell = row.insertCell();
+            scenarioIdCell.textContent = scenario.id;
+            scenarioTitleCell.textContent = scenario.title;
+            scenarioDescCell.textContent = scenario.description;
+            const startBtn = document.createElement("button");
+            startBtn.textContent = "Start";
+            startBtn.addEventListener("click", function() {
+              startScenario(scenario.id, server, port, projectId);
+            });
+            const stopBtn = document.createElement("button");
+            stopBtn.textContent = "Stop";
+            stopBtn.addEventListener("click", function() {
+              stopScenario(scenario.id, server, port, projectId);
+            });
+            scenarioBtnCell.appendChild(startBtn);
+            scenarioBtnCell.appendChild(stopBtn);
+          });
+          const scenarioTable = document.getElementById("scenarioTable");
+          const cells = scenarioTable.getElementsByTagName("td");
+          for (let i = 0; i < cells.length; i++) {
+            cells[i].style.border = "1px solid black";
+          }
+        })
+        .catch(error => console.error(error));
+    }
+    function startScenario(scenarioId, serverIp, serverPort, projectId) {
+      const url = `/api/tasks/${scenarioId}`;
+      const data = {
+        server_name: "my-server",
+        server_ip: serverIp,
+        port: serverPort,
+        project_id: projectId
+      };
+      fetch(url, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .catch(error => console.error(error));
+    }
+    function stopScenario(scenarioId, serverIp, serverPort, projectId) {
+      const url = `/api/tasks/${scenarioId}`;
+      const data = {
+        server_name: "my-server",
+        server_ip: serverIp,
+        port: serverPort,
+        project_id: projectId
+      };
+      fetch(url, {
+        method: "DELETE",
+        body: JSON.stringify(data),
+        headers: {
+          "Content-Type": "application/json"
+        }
+      })
+      .catch(error => console.error(error));
+    }
+    function updateScenarioStatusTable() {
+      const statusNames = {
+        0: 'Stopped',
+        1: 'Starting',
+        2: 'Running',
+        3: 'Stopping',
+        4: 'Error'
+      };
+      fetch('/api/uc_scenario_status')
+        .then(response => response.json())
+        .then(data => {
+          const tableBody = document.querySelector('#scenario-status tbody');
+          // Clear the existing rows from the table
+          tableBody.innerHTML = '';
+          // Loop through the array of objects and add a new row for each item
+          data.scenario_status.forEach(item => {
+            const row = document.createElement('tr');
+            const serverIpCell = document.createElement('td');
+            serverIpCell.textContent = item.server_ip;
+            const serverNameCell = document.createElement('td');
+            serverNameCell.textContent = item.server_name;
+            const projectNameCell = document.createElement('td');
+            projectNameCell.textContent = item.project_name;
+            const projectIdCell = document.createElement('td');
+            projectIdCell.textContent = item.project_id;
+            const scenarioIdCell = document.createElement('td');
+            scenarioIdCell.textContent = item.scenario_id;
+            const statusCell = document.createElement('td');
+            statusCell.textContent = statusNames[item.status];
+            const actionCell = document.createElement('td');
+            const button = document.createElement('button');
+            button.textContent = (item.status === 2 || item.status === 1) ? 'Stop' : 'Start';
+            button.addEventListener('click', () => {
+              if (item.status === 2 || item.status === 1) {
+                stopScenario(item.scenario_id, item.server_ip, item.server_port, item.project_id);
+              } else {
+                startScenario(item.scenario_id, item.server_ip, item.server_port, item.project_id);
+              }
+            });
+            actionCell.appendChild(button);
+            row.appendChild(serverIpCell);
+            row.appendChild(serverNameCell);
+            row.appendChild(projectNameCell);
+            row.appendChild(projectIdCell);
+            row.appendChild(scenarioIdCell);
+            row.appendChild(statusCell);
+            row.appendChild(actionCell);
+            // Add CSS style to the table cells
+            serverIpCell.style.border = '1px solid black';
+            serverIpCell.style.padding = '5px';
+            serverNameCell.style.border = '1px solid black';
+            serverNameCell.style.padding = '5px';
+            projectNameCell.style.border = '1px solid black';
+            projectNameCell.style.padding = '5px';
+            projectIdCell.style.border = '1px solid black';
+            projectIdCell.style.padding = '5px';
+            scenarioIdCell.style.border = '1px solid black';
+            scenarioIdCell.style.padding = '5px';
+            statusCell.style.border = '1px solid black';
+            statusCell.style.padding = '5px';
+            actionCell.style.border = '1px solid black';
+            actionCell.style.padding = '5px';
+            tableBody.appendChild(row);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching scenario status data:', error);
+        });
+    }
+
+    // Call the updateScenarioStatusTable() function every 2 seconds to refresh the table
+    setInterval(updateScenarioStatusTable, 2000);
+  </script>
+</body>
+</html>

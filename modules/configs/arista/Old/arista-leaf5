@@ -1,0 +1,95 @@
+no aaa root
+!
+service routing protocols model multi-agent
+!
+hostname arista-leaf5
+!
+spanning-tree mode mstp
+!
+snmp-server engineID local f5717f0e54315af85400
+snmp-server location Miami/US
+snmp-server view all iso included
+snmp-server group dxnetops v3 priv write all
+snmp-server user dxnetops dxnetops v3 localized f5717f0e54315af85400 auth sha256 7f51ceccb6c1d668d7b10d03eb2677e2f251a6e6f2c8ee39aef457ae49e54c9b priv aes 7f51ceccb6c1d668d7b10d03eb2677e2
+snmp-server host 192.168.100.200 version 3 auth dxnetops
+snmp-server community public ro
+snmp-server community private rw
+!
+vlan 100
+   name Management-VLAN
+!
+interface Vlan100
+   ip address 172.16.3.8/24
+!
+vlan 40
+   name client_lan
+!
+aaa authorization exec default local
+!
+!
+interface Ethernet1
+   switchport access vlan 40
+!
+interface Ethernet11
+   description spine1
+   mtu 9214
+   no switchport
+   ip address 10.0.1.9/31
+!
+interface Ethernet12
+   description spine2
+   mtu 9214
+   no switchport
+   ip address 10.0.2.9/31
+!
+interface Ethernet19
+   switchport access vlan 100
+!
+interface Loopback0
+   ip address 10.0.250.15/32
+!
+interface Loopback1
+   ip address 10.0.255.15/32
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   vxlan vlan 40 vni 110040
+   vxlan learn-restrict any
+!
+ip routing
+!
+router bgp 65003
+   router-id 10.0.250.14
+   no bgp default ipv4-unicast
+   distance bgp 20 200 200
+   maximum-paths 4 ecmp 64
+   neighbor evpn peer group
+   neighbor evpn next-hop-unchanged
+   neighbor evpn update-source Loopback0
+   neighbor evpn ebgp-multihop 3
+   neighbor evpn send-community extended
+   neighbor evpn maximum-routes 12000
+   neighbor 10.0.1.8 remote-as 65000
+   neighbor 10.0.2.8 remote-as 65000
+   neighbor 10.0.250.1 peer group evpn
+   neighbor 10.0.250.1 remote-as 65000
+   neighbor 10.0.250.2 peer group evpn
+   neighbor 10.0.250.2 remote-as 65000
+   !
+   vlan 40
+      rd 65002:110040
+      route-target both 40:110040
+      redistribute learned
+   !
+   address-family evpn
+      neighbor evpn activate
+   !
+   address-family ipv4
+      neighbor 10.0.1.8 activate
+      neighbor 10.0.2.8 activate
+      network 10.0.250.15/32
+      network 10.0.255.15/32
+!
+ip route 0.0.0.0/0 172.16.3.1
+end

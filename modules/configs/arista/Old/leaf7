@@ -1,0 +1,143 @@
+no aaa root
+!
+username ansible privilege 15 role network-admin secret sha512 $6$fgivtDQ8tILbZi66$I9iJDBPNKXh1FFBxHDXKLWWvbybIdy5K59pew1OMgq4x3RWsPeggdam9XWkUmeuwYqWqJYp61B4v0ucTUJVmY.
+!
+transceiver qsfp default-mode 4x10G
+!
+service routing protocols model multi-agent
+!
+hostname arista-leaf7
+!
+spanning-tree mode mstp
+!
+vlan 4090
+   name mlag-peer
+   trunk group mlag-peer
+!
+vlan 4091
+   name mlag-ibgp
+   trunk group mlag-peer
+!
+management api http-commands
+   no shutdown
+   !
+   vrf mgmt
+      no shutdown
+!
+aaa authorization exec default local
+!
+interface Port-Channel999
+   description MLAG Peer
+   switchport mode trunk
+   switchport trunk group mlag-peer
+   spanning-tree link-type point-to-point
+!
+interface Ethernet1
+!
+interface Ethernet2
+!
+interface Ethernet3
+!
+interface Ethernet4
+!
+interface Ethernet5
+!
+interface Ethernet6
+!
+interface Ethernet7
+!
+interface Ethernet8
+!
+interface Ethernet9
+!
+interface Ethernet10
+   description mlag peer link
+   channel-group 999 mode active
+!
+interface Ethernet11
+   description spine1
+   mtu 9214
+   no switchport
+   ip address 10.0.1.13/31
+!
+interface Ethernet12
+   description spine2
+   mtu 9214
+   no switchport
+   ip address 10.0.2.13/31
+!
+interface Ethernet13
+!
+interface Ethernet14
+!
+interface Ethernet15
+!
+interface Ethernet16
+!
+interface Ethernet17
+!
+interface Ethernet18
+!
+interface Ethernet19
+!
+interface Loopback0
+   ip address 10.0.250.17/32
+!
+interface Loopback1
+   ip address 10.0.255.17/32
+!
+interface Management1
+   ip address 10.0.0.157/24
+!
+interface Vlan4090
+   no autostate
+   ip address 10.0.99.254/31
+!
+interface Vlan4091
+   mtu 9214
+   ip address 10.0.3.6/31
+!
+interface Vxlan1
+   vxlan source-interface Loopback1
+   vxlan udp-port 4789
+   vxlan learn-restrict any
+!
+ip routing
+!
+mlag configuration
+   domain-id leafs
+   local-interface Vlan4090
+   peer-address 10.0.99.255
+   peer-link Port-Channel999
+!
+router bgp 65004
+   router-id 10.0.250.17
+   no bgp default ipv4-unicast
+   distance bgp 20 200 200
+   maximum-paths 4 ecmp 64
+   neighbor evpn peer group
+   neighbor evpn next-hop-unchanged
+   neighbor evpn update-source Loopback0
+   neighbor evpn ebgp-multihop 3
+   neighbor evpn send-community extended
+   neighbor evpn maximum-routes 12000
+   neighbor 10.0.1.12 remote-as 65000
+   neighbor 10.0.2.12 remote-as 65000
+   neighbor 10.0.3.7 remote-as 65004
+   neighbor 10.0.3.7 next-hop-self
+   neighbor 10.0.250.1 peer group evpn
+   neighbor 10.0.250.1 remote-as 65000
+   neighbor 10.0.250.2 peer group evpn
+   neighbor 10.0.250.2 remote-as 65000
+   !
+   address-family evpn
+      neighbor evpn activate
+   !
+   address-family ipv4
+      neighbor 10.0.1.12 activate
+      neighbor 10.0.2.12 activate
+      neighbor 10.0.3.7 activate
+      network 10.0.250.17/32
+      network 10.0.255.17/32
+!
+end

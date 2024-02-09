@@ -1,0 +1,93 @@
+conf t
+system
+host-name               {hostname}
+gps-location latitude {latitude}
+gps-location longitude {longitude}
+system-ip               {system_ip}
+site-id                 1000
+admin-tech-on-failure
+no vrrp-advt-with-phymac
+sp-organization-name  {org_name}
+organization-name     {org_name}
+vbond {vbond_address}
+aaa
+auth-order      local radius tacacs
+usergroup basic
+  task system read write
+  task interface read write
+usergroup global
+usergroup netadmin
+usergroup network_operations
+  task policy read write
+usergroup operator
+  task system read
+  task interface read
+  task policy read
+  task routing read
+  task security read
+usergroup read_only
+  task system read
+  task interface read
+  task policy read
+  task routing read
+  task security read
+usergroup resource_group_admin
+  task system read
+  task interface read
+usergroup resource_group_basic
+  task system read
+  task interface read
+usergroup resource_group_operator
+  task system read
+  task interface read
+usergroup security_operations
+  task security read write
+usergroup tenantadmin
+user admin
+  password $6$ba8498d058adc700$36iE.yN3RgFgE.f..kzn7Guw978c8mQS7lBIIItYF2fV59K0DQT4qSkMGfedq8LYEvPADPpf7kb3wN/GE1OkP/
+user view_only
+  password    $6$268456130945c4f8$6n2Tp3zdjbj2qUcL876QHuxpETskqbUbvKGNq7TzEIRzuQDfoswRenxP2lkg55gYbeQHYi1PwEiIP9Q56aZs30
+  description view_only
+  group       global read_only
+ciscotacro-user true
+ciscotacrw-user true
+logging
+disk
+  enable
+ssh-server
+cipher aes-128-192
+kex-algo sha1
+ntp
+parent
+  no enable
+  stratum 5
+exit
+snmp
+no shutdown
+view all
+oid 1.3.6.*
+community $8$0005B8B1658C1EFFDB51F54F93BD6C3D
+view          all
+authorization read-only
+vpn 0
+no int eth0
+interface eth1
+ip address {vpn_0_eth1_ip_address}
+tunnel-interface
+  allow-service all
+  allow-service dhcp
+  allow-service dns
+  allow-service icmp
+  allow-service sshd
+  no allow-service netconf
+  no allow-service ntp
+  no allow-service stun
+  allow-service https
+no shutdown
+ip route 0.0.0.0/0 {vpn_0_eth1_ip_gateway}
+vpn 512
+interface eth0
+ip address {vpn_512_eth0_ip_address}
+no shutdown
+ip route 0.0.0.0/0 {vpn_512_eth0_ip_gateway}
+commit and-quit

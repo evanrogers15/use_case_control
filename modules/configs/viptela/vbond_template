@@ -1,0 +1,82 @@
+conf t
+system
+host-name               {hostname}
+gps-location latitude {latitude}
+gps-location longitude {longitude}
+system-ip               {system_ip}
+site-id                 1000
+admin-tech-on-failure
+no route-consistency-check
+no vrrp-advt-with-phymac
+sp-organization-name    {org_name}
+organization-name       {org_name}
+vbond {vbond_address} local
+aaa
+auth-order      local radius tacacs
+usergroup basic
+  task system read write
+  task interface read write
+usergroup netadmin
+usergroup operator
+  task system read
+  task interface read
+  task policy read
+  task routing read
+  task security read
+usergroup tenantadmin
+user admin
+  password $6$a2a64e78c8dce138$XpCZ0sl3vLLe2XhEmEhVybtIqN25ZeoWeHgmdO8fQNzQU8nLhUITDjS5QrwG7llNGXwxE7gkP90ApZ3qrjM9H.
+ciscotacro-user true
+ciscotacrw-user true
+logging
+disk
+  enable
+ntp
+parent
+  no enable
+  stratum 5
+exit
+omp
+no shutdown
+graceful-restart
+advertise connected
+advertise static
+security
+ipsec
+integrity-type ip-udp-esp esp
+snmp
+no shutdown
+view all
+oid 1.3.6.*
+community $8$0005B8B1658C1EFFDB51F54F93BD6C3D
+view          all
+authorization read-only
+vpn 0
+name "Transport VPN"
+interface ge0/0
+ip address {vpn_0_eth1_ip_address}
+ipv6 dhcp-client
+tunnel-interface
+  encapsulation ipsec
+  allow-service all
+  no allow-service bgp
+  allow-service dhcp
+  allow-service dns
+  allow-service icmp
+  allow-service sshd
+  allow-service netconf
+  no allow-service ntp
+  no allow-service ospf
+  no allow-service stun
+  allow-service https
+no shutdown
+ip route 0.0.0.0/0 {vpn_0_eth1_ip_gateway}
+vpn 512
+name "MGMT VPN"
+interface eth0
+ip address {vpn_512_eth0_ip_address}
+ipv6 dhcp-client
+no shutdown
+ip route 0.0.0.0/0 {vpn_512_eth0_ip_gateway}
+commit and-quit
+

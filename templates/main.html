@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GNS3 Environment Autodeployment & Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333333;
+            margin-top: 0;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #007bff;
+            transition: color 0.3s;
+        }
+
+        a:hover {
+            color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 style="text-align: center;">GNS3 Lab Environment<br>Deployment & Use Case Control</h1>
+        <hr>
+        <div class="container">
+            <h2>Standard Deployment Types</h2>
+            <ul>
+                <li><a href="{{ url_for('arista_deploy_render') }}">Arista</a> - Deploy Arista EVPN Lab</li>
+                <li style="padding-left: 20px;">Requires Arista cEOS Docker image installed prior to auto deployment.</li>
+            </ul>
+        </div>
+        <div class="container">
+            <h2>AppNeta Enabled Deployment Types</h2>
+            <ul>
+                <li><a href="{{ url_for('versa_appneta_deploy_render') }}">Versa SDWAN</a> - Deploy Versa SDWAN and AppNeta Monitoring Points Environment</li>
+                <li style="padding-left: 20px;">Requires Versa component disk images, retrieval instructions below.</li>
+                <li><a href="{{ url_for('viptela_vedge_appneta_deploy_render') }}">Viptela vEdge SDWAN</a> - Deploy Viptela SDWAN using Viptela vEdge CPEs and AppNeta Monitoring Points Environment</li>
+                <li style="padding-left: 20px;">Requires Viptela component disk images, valid Cisco license required to download images.</li>
+                <li><a href="{{ url_for('viptela_cedge_appneta_deploy_render') }}">Viptela cEdge SDWAN</a> - Deploy Viptela SDWAN using Cisco Catalyst 8000v CPEs and AppNeta Monitoring Points Environment</li>
+                <li style="padding-left: 20px;">Requires Viptela component disk images, valid Cisco license required to download images.</li>
+            </ul>
+        </div>
+        <div class="container">
+            <h2>Use Case Control</h2>
+            <ul>
+                <li><a href="{{ url_for('use_case_local') }}">Local Server</a> - Control use cases on local GNS3 Server</li>
+                <li><a href="{{ url_for('use_case_remote') }}">Remote Server</a> - Control use cases on remote GNS3 Server</li>
+            </ul>
+        </div>
+
+    <div class="container">
+    <h2>Tap Interface Setup</h2>
+    <ol>
+        <li>Install needed packages:</li>
+        <code>apt-get update<br>
+        apt install -y net-tools<br>
+        apt-get install -y uml-utilities<br>
+        </code>
+        <br>
+        <li>Create System Files:</li>
+        <pre><code>
+tee /lib/systemd/system/tap1.service &lt;&lt; EOF
+    [Unit]
+    Description=TAP Interfaces
+    After=network.target
+    [Service]
+    Type=oneshot
+    User=root
+    ExecStart=/bin/sh /usr/bin/tap1.sh
+    [Install]
+    WantedBy=multi-user.target
+EOF
+</code></pre>
+<pre><code>
+tee /usr/bin/tap1.sh &lt;&lt; EOF
+#!/bin/bash
+if [ ! -d "/sys/class/net/tap1" ];
+then
+/usr/bin/tunctl -t tap1
+/sbin/ifconfig tap1 172.16.2.1 netmask 255.255.255.0 up
+fi
+EOF
+</code></pre>
+        <li>Mark tap interface file as executable:</li>
+        <code>chmod +x /usr/bin/tap1.sh</code>
+        <br><br>
+        <li>Enable service to start automatically at boot then start the service:</li>
+        <code>systemctl enable tap1.service && systemctl start tap1.service</code>
+        <br><br>
+        <li>Run <code>ifconfig tap1</code> to verify the interface has been created.</li>
+    </ol>
+    </div>
+        <div class="container">
+    <h2>Versa Images Setup</h2>
+    <ol>
+        <li>Retrieve the Versa Director, Versa Analytics, and VOS (FlexVNF) qcow2.tbz2 images from the Box repository <a href="https://versanetworks.app.box.com/v/21-2-3-GA-GO/folder/168829564793" target="_blank" rel="noopener noreferrer">here</a>.</li>
+        <li>Extract the Versa Director qcow2 from the tar file using the following command (example):</li>
+        <code>tar -xjvf versa-director-c19c43c-21.2.3.qcow2.tbz2</code>
+        <li>Extract the Versa Analytics image from the tar file using the following command (example):</li>
+        <code>tar -xjvf versa-analytics-67ff6c7-21.2.3.qcow2.tbz2</code>
+        <li>Extract the Versa FlexVNF image from the tar file using the following command (example):</li>
+        <code>tar -xjvf versa-flexvnf-67ff6c7-21.2.3.qcow2.tbz2</code>
+        <li>Move the extracted files to your <code>gns3/images/QEMU</code> directory or drag and drop them on the deployment page.</li>
+    </ol>
+    </div>
+        <div class="container">
+    <h2>HAProxy Setup</h2>
+    <ol>
+        <h4>If you would like to reach the Management UI (Viptela vManage, Versa Director, etc) outside of the lab easily, you can install HAProxy on the GNS3 host. <br> The below commands will install HAProxy and set it to relay port 443 of your GNS3 host to 172.16.2.2. Modify if using a different management subnet.</h4>
+        <li>Install HAproxy:</li>
+        <code>sudo apt-get install -y haproxy</code>
+        <br><br>
+        <li>Overwrite the configuration file:</li>
+        <pre><code>
+tee /etc/haproxy/haproxy.cfg &lt;&lt; EOF
+    global
+        log /dev/log local0
+        log /dev/log local1 notice
+        chroot /var/lib/haproxy
+        stats socket /var/run/api.sock user haproxy group haproxy mode 660 level admin expose-fd listeners
+        stats timeout 30s
+        user haproxy
+        group haproxy
+        daemon
+    defaults
+        log global
+        mode http
+        option httplog
+        option dontlognull
+        timeout connect 5000
+        timeout client 50000
+        timeout server 50000
+    frontend https-in
+        bind *:443
+        option tcplog
+        mode tcp
+        default_backend servers
+    backend servers
+        mode tcp
+        balance roundrobin
+        server server1 172.16.2.2:443
+EOF
+            </code></pre>
+        <li>Enable HAProxy to run at boot and restart service to pick up new configuration:</li>
+        <code>sudo systemctl restart haproxy && sudo systemctl enable haproxy</code>
+        <br><br>
+        <li>In your internet browser, browse to your GNS3 Server's IP address using HTTPS. Example (https://gns3serverIP)</li>
+    </ol>
+    </div>
+
+    </body>
+</html>

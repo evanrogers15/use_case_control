@@ -1,0 +1,5 @@
+no snmp-server group dxnetops v3 priv write all
+no snmp-server user dxnetops dxnetops v3 localized f5717f0e54315af85400 auth sha256 7f51ceccb6c1d668d7b10d03eb2677e2f251a6e6f2c8ee39aef457ae49e54c9b priv aes 7f51ceccb6c1d668d7b10d03eb2677e2
+no snmp-server host 192.168.100.200 version 3 auth dxnetops
+logging host 10.8.0.2 514
+snmp-server host 10.8.0.2 version 2c public
