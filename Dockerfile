@@ -20,4 +20,4 @@ RUN apt-get update && apt-get install -y sqlite3 vim
 RUN python modules/setup/sqlite_setup.py
 
 # Set the default command to run both Flask and Node.js
-CMD ["bash", "-c", "python -m flask run -p 8081 --host=0.0.0.0"]
+CMD ["bash", "-c", "python -m flask run -p 8080 --host=0.0.0.0"]
