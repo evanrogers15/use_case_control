@@ -16,7 +16,7 @@ running_thread = None
 # region Template Render
 @app.route('/')
 def main_page():
-    return render_template('main.html')
+    return render_template('use_case/uc_local.html')
 
 @app.route('/uc-local')
 def use_case_local():

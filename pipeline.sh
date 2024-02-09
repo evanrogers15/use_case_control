@@ -53,8 +53,8 @@ docker build -t evanrogers15/use_case_control:test .
 # Check if the -d flag is passed
 if [[ " $* " == *" -d "* ]]; then
     # Run the Docker container in detached mode with the specified port mapping(s) and container name
-    docker run -d --name use_case_control evanrogers15/use_case_control:test
+    docker run -d --name use_case_control -p 8081:8080 evanrogers15/use_case_control:test
 else
     # Run the Docker container in foreground with the specified port mapping(s) and container name
-    docker run --name use_case_control evanrogers15/use_case_control:test
+    docker run --name use_case_control -p 8081:8080 evanrogers15/use_case_control:test
 fi
