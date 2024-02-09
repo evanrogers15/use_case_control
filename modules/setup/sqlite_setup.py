@@ -9,52 +9,6 @@ conn.close()
 # Open a connection to the database
 conn = sqlite3.connect(DB_PATH)
 
-# Create the config table
-conn.execute('''
-CREATE TABLE IF NOT EXISTS config (
-    id INTEGER PRIMARY KEY,
-    server_name TEXT,
-    server_ip TEXT,
-    server_port INTEGER,
-    project_list TEXT,
-    project_names TEXT,
-    project_status TEXT,
-    project_name TEXT,
-    project_id TEXT,
-    site_count INTEGER,
-    tap_name TEXT,
-    mgmt_subnet_ip TEXT,
-    appn_url TEXT,
-    appn_site_key TEXT
-    
-);
-''')
-# Create the projects table
-conn.execute('''
-CREATE TABLE IF NOT EXISTS projects (
-    id INTEGER PRIMARY KEY,
-    server_name TEXT,
-    server_ip TEXT,
-    server_port INTEGER,
-    project_id INTEGER,
-    project_name TEXT,
-    project_status TEXT
-);
-''')
-# Create the deployments table
-conn.execute('''
-CREATE TABLE IF NOT EXISTS deployments (
-    id INTEGER PRIMARY KEY,
-    timestamp TEXT, 
-    server_name TEXT,
-    server_ip TEXT,
-    project_name TEXT,
-    deployment_type TEXT,
-    deployment_status TEXT,
-    deployment_step TEXT,
-    log_message TEXT
-);
-''')
 # Create the uc_config table
 conn.execute('''
 CREATE TABLE IF NOT EXISTS uc_config (

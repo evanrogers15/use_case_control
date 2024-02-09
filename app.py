@@ -2,10 +2,10 @@ from flask import Flask, jsonify, abort, make_response, request, render_template
 import subprocess
 import psutil
 import threading
-
+# Create a lock for controlling access to the endpoint
+endpoint_lock = Lock()
 
 from modules.use_case.use_cases import *
-from modules.deployment.versa_appneta_deployment import *
 
 app = Flask(__name__)
 
@@ -36,61 +36,69 @@ def adminPage():
 # region Use Case
 @app.route('/api/uc_config', methods=['POST'])
 def uc_update_config():
-    req_data = request.get_json()
-    if not req_data:
-        return jsonify({'error': 'Request data is empty or None.'}), 400
-    server_ip = req_data.get('server_ip')
-    if not server_ip:
-        return jsonify({'error': 'Server IP is missing.'}), 400
-    server_port = req_data.get('server_port')
-    uc_projects = gns3_query_get_projects(server_ip, server_port)
-    server_name = gns3_query_get_computes_name(server_ip, server_port)
-    project_ids = [project['project_id'] for project in uc_projects]
-    project_names = [project['name'] for project in uc_projects]
-    project_status = [project['status'] for project in uc_projects]
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    c.execute("SELECT COUNT(*) FROM uc_config WHERE server_ip=?", (server_ip,))
-    row = c.fetchone()
-    if row[0] == 0:
-        c.execute(
-            "INSERT INTO uc_config (server_ip, server_port, server_name, project_list, project_name, project_status) VALUES (?, ?, ?, ?, ?, ?)",
-            (server_ip, server_port, server_name, json.dumps(project_ids), json.dumps(project_names),
-             json.dumps(project_status)))
-    else:
-        c.execute(
-            "UPDATE uc_config SET server_port = ?, server_name = ?, project_list = ?, project_name = ?, project_status = ? WHERE server_ip = ?",
-            (server_port, server_name, json.dumps(project_ids), json.dumps(project_names), json.dumps(project_status),
-             server_ip))
-    # Insert data into the uc_projects table if project_id is present
-    if 'project_id' in req_data:
-        project_id = req_data['project_id']
+    if not endpoint_lock.acquire(blocking=False):
+        # If the lock is already acquired, return an error response
+        return jsonify({'error': 'Another task is currently being processed. Please try again later.'}), 429
+
+    try:
+        req_data = request.get_json()
+        if not req_data:
+            return jsonify({'error': 'Request data is empty or None.'}), 400
+        server_ip = req_data.get('server_ip')
+        if not server_ip:
+            return jsonify({'error': 'Server IP is missing.'}), 400
+        server_port = req_data.get('server_port')
+        uc_projects = gns3_query_get_projects(server_ip, server_port)
+        server_name = gns3_query_get_computes_name(server_ip, server_port)
+        project_ids = [project['project_id'] for project in uc_projects]
+        project_names = [project['name'] for project in uc_projects]
+        project_status = [project['status'] for project in uc_projects]
         conn = sqlite3.connect(db_path)
         c = conn.cursor()
-        c.execute("SELECT project_list FROM uc_config WHERE server_ip = ? AND server_port = ?",
-                  (server_ip, server_port))
+        c.execute("SELECT COUNT(*) FROM uc_config WHERE server_ip=?", (server_ip,))
         row = c.fetchone()
-        if row:
-            project_list = json.loads(row[0])
-            if project_id in project_list:
-                index = project_list.index(project_id)
-                c.execute("SELECT project_name, project_status FROM uc_config WHERE server_ip = ? AND server_port = ?",
-                          (server_ip, server_port))
-                row = c.fetchone()
-                if row:
-                    project_name = json.loads(row[0])[index]
-                    project_status = json.loads(row[1])[index]
-                    # Check if the project_id already exists in the uc_projects table
-                    c.execute("SELECT COUNT(*) FROM uc_projects WHERE project_id=?", (project_id,))
+        if row[0] == 0:
+            c.execute(
+                "INSERT INTO uc_config (server_ip, server_port, server_name, project_list, project_name, project_status) VALUES (?, ?, ?, ?, ?, ?)",
+                (server_ip, server_port, server_name, json.dumps(project_ids), json.dumps(project_names),
+                 json.dumps(project_status)))
+        else:
+            c.execute(
+                "UPDATE uc_config SET server_port = ?, server_name = ?, project_list = ?, project_name = ?, project_status = ? WHERE server_ip = ?",
+                (server_port, server_name, json.dumps(project_ids), json.dumps(project_names), json.dumps(project_status),
+                 server_ip))
+        # Insert data into the uc_projects table if project_id is present
+        if 'project_id' in req_data:
+            project_id = req_data['project_id']
+            conn = sqlite3.connect(db_path)
+            c = conn.cursor()
+            c.execute("SELECT project_list FROM uc_config WHERE server_ip = ? AND server_port = ?",
+                      (server_ip, server_port))
+            row = c.fetchone()
+            if row:
+                project_list = json.loads(row[0])
+                if project_id in project_list:
+                    index = project_list.index(project_id)
+                    c.execute("SELECT project_name, project_status FROM uc_config WHERE server_ip = ? AND server_port = ?",
+                              (server_ip, server_port))
                     row = c.fetchone()
-                    if row[0] == 0:
-                        c.execute(
-                            "INSERT INTO uc_projects (server_name, server_ip, server_port, project_id, project_name, project_status) VALUES (?, ?, ?, ?, ?, ?)",
-                            (req_data.get('server_name'), server_ip, server_port, project_id, project_name,
-                             project_status))
-    conn.commit()
-    conn.close()
-    return jsonify({'success': True})
+                    if row:
+                        project_name = json.loads(row[0])[index]
+                        project_status = json.loads(row[1])[index]
+                        # Check if the project_id already exists in the uc_projects table
+                        c.execute("SELECT COUNT(*) FROM uc_projects WHERE project_id=?", (project_id,))
+                        row = c.fetchone()
+                        if row[0] == 0:
+                            c.execute(
+                                "INSERT INTO uc_projects (server_name, server_ip, server_port, project_id, project_name, project_status) VALUES (?, ?, ?, ?, ?, ?)",
+                                (req_data.get('server_name'), server_ip, server_port, project_id, project_name,
+                                 project_status))
+        conn.commit()
+        conn.close()
+    finally:
+        endpoint_lock.release()
+
+    return jsonify({'scenario': {'running': True}}), 201
 
 @app.route('/api/uc_config', methods=['GET'])
 def uc_get_config():
