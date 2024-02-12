@@ -288,7 +288,7 @@ def uc_get_scenario_status():
             }
             return jsonify({'scenario_status': data})
         else:
-            return jsonify({'message': 'Scenario not found'}), 404
+            return jsonify({'message': 'Scenario not run yet'}), 404
     else:
         # SQL query to get the status of all scenarios if no ID is provided
         c.execute("""
