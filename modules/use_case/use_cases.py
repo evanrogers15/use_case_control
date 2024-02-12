@@ -4,7 +4,7 @@ from modules.gns3.gns3_query import *
 from modules.gns3.gns3_actions import *
 import logging.handlers
 
-def use_case_1(server, port, project_id, state):
+def use_case_15(server, port, project_id, state):
     filter_type = 'packet_loss'
     filter_value = '10'
     link_id_dev = "0f296ad9-2992-4d32-afda-3deeafe908b1"
@@ -15,12 +15,47 @@ def use_case_1(server, port, project_id, state):
     else:
         gns3_remove_single_packet_filter(server, port, project_id, link_id)
         return {'message': 'Scenario started successfully.'}, 200
+def use_case_1(server, port, project_id, state):
+    filter_type = 'packet_loss'
+    filter_value = '10'
+    remote_node_name = 'FlexVNF-002-Seattle'
+    router_node_name = 'isp-seattle'
+    nodes = gns3_query_get_nodes(server, port, project_id)
 
-def use_case_2(server, port, project_id, state):
+    router_node_id, router_console, router_aux = gns3_query_find_node_by_name(nodes, router_node_name)
+    remote_node_id_1, remote_node_console_1, remote_node_aux_1 = gns3_query_find_node_by_name(nodes, remote_node_name)
+
+    links = gns3_query_get_links(server, port, project_id, router_node_id)
+    link_id = gns3_query_get_node_links(nodes, links, server, port, project_id, router_node_id, remote_node_id_1, '1/0')
+    if state == 'on':
+        gns3_set_single_packet_filter_simple(server, port, project_id, link_id, filter_type, filter_value)
+        return {'message': 'Scenario started successfully.'}, 200
+    else:
+        gns3_remove_single_packet_filter(server, port, project_id, link_id)
+        return {'message': 'Scenario stopped successfully.'}, 200
+
+def use_case_25(server, port, project_id, state):
     link_id_dev = "8606cf9c-da87-4bf6-b620-5e6d344adeb7"
     link_id = "24196a68-abd6-4927-a615-926bd8ab08b9"
     gns3_set_suspend(server, port, project_id, link_id)
     return {'message': 'Scenario started successfully.'}, 200
+
+def use_case_2(server, port, project_id, state):
+    remote_node_name = 'atlanta-sw-dist-02'
+    router_node_name = 'atlanta-sw-core-01'
+    nodes = gns3_query_get_nodes(server, port, project_id)
+
+    router_node_id, router_console, router_aux = gns3_query_find_node_by_name(nodes, router_node_name)
+    remote_node_id_1, remote_node_console_1, remote_node_aux_1 = gns3_query_find_node_by_name(nodes, remote_node_name)
+
+    links = gns3_query_get_links(server, port, project_id, router_node_id)
+    link_id = gns3_query_get_node_links(nodes, links, server, port, project_id, router_node_id, remote_node_id_1, '2/0')
+    if state == 'on':
+        gns3_set_suspend(server, port, project_id, link_id)
+        return {'message': 'Scenario started successfully.'}, 200
+    else:
+        gns3_set_suspend(server, port, project_id, link_id)
+        return {'message': 'Scenario stopped successfully.'}, 200
 
 def use_case_3(server, port, project_id, state):
     remote_node_name = 'Miami-Client-2'
@@ -38,6 +73,7 @@ def use_case_3(server, port, project_id, state):
 
 def use_case_4(server, port, project_id, state):
     viptela_new_password = "CAdemo@123"
+    viptela_username = "admin"
     remote_node_name = 'vEdge_001_Houston'
     nodes = gns3_query_get_nodes(server, port, project_id)
     remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
