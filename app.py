@@ -275,7 +275,7 @@ def uc_get_scenario_status():
             JOIN 
                 uc_config ON uc_scenario_status.server_ip = uc_config.server_ip
             WHERE 
-                uc_scenario_status.id = ?
+                uc_scenario_status.scenario_id = ?
         """, (scenario_id,))
 
         row = c.fetchone()
