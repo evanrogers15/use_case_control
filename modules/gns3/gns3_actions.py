@@ -520,7 +520,7 @@ def gns3_remove_single_packet_filter(server, port, project_id, link_id):
         print(f"\nAn unexpected error occurred: {response.status_code}")
         return
 
-def gns3_set_suspend(server, port, project_id, link_id):
+def gns3_set_suspend_old(server, port, project_id, link_id):
     # Get the current state of the link
     url = f"http://{server}:{port}/v2/projects/{project_id}/links/{link_id}"
     response = requests.get(url)
@@ -545,6 +545,31 @@ def gns3_set_suspend(server, port, project_id, link_id):
             print("Link enabled.")
     else:
         print("Error updating link state.")
+
+def gns3_set_suspend(server, port, project_id, link_id):
+    # Get the current state of the link
+    url = f"http://{server}:{port}/v2/projects/{project_id}/links/{link_id}"
+    response = requests.get(url)
+
+    if not response.ok:
+        print("Error retrieving link state.")
+        return
+
+    link_data = response.json()
+
+    # Check if the link is currently active (not suspended)
+    if "suspend" in link_data and not link_data ["suspend"]:
+        # The link is active; proceed to suspend it
+        data = {"suspend": True}
+        response = requests.put(url, json=data)
+        if response.ok:
+            print("Link suspended.")
+        else:
+            print("Error suspending link.")
+    else:
+        # The link is either already suspended or the "suspend" key does not exist
+        print("Link is already suspended or cannot be suspended.")
+
 
 def gns3_reset_single_suspend(server, port, project_id, link_id):
     # Get the current state of the link
