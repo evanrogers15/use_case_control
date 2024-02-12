@@ -54,7 +54,7 @@ def use_case_2(server, port, project_id, state):
         gns3_set_suspend(server, port, project_id, link_id)
         return {'message': 'Scenario started successfully.'}, 200
     else:
-        gns3_set_suspend(server, port, project_id, link_id)
+        gns3_reset_single_suspend(server, port, project_id, link_id)
         return {'message': 'Scenario stopped successfully.'}, 200
 
 def use_case_3(server, port, project_id, state):
