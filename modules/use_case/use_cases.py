@@ -49,7 +49,7 @@ def use_case_2(server, port, project_id, state):
     remote_node_id_1, remote_node_console_1, remote_node_aux_1 = gns3_query_find_node_by_name(nodes, remote_node_name)
 
     links = gns3_query_get_links(server, port, project_id, router_node_id)
-    link_id = gns3_query_get_node_links(nodes, links, server, port, project_id, router_node_id, remote_node_id_1)
+    link_id = gns3_query_get_node_links(nodes, links, server, port, project_id, router_node_id, remote_node_id_1, '0/0')
     if state == 'on':
         gns3_set_suspend(server, port, project_id, link_id)
         return {'message': 'Scenario started successfully.'}, 200
