@@ -223,8 +223,8 @@ def uc_get_scenario(scenario_id):
     }
     return jsonify({'scenario': scenario})
 
-@app.route('/api/uc_scenario_status', methods=['GET'])
-def uc_get_scenario_status():
+@app.route('/api/uc_scenario_status_old', methods=['GET'])
+def uc_get_scenario_status_old():
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute(
@@ -245,6 +245,78 @@ def uc_get_scenario_status():
             'process_id': row[8]
         })
     return jsonify({'scenario_status': data})
+
+
+@app.route('/api/uc_scenario_status', methods=['GET'])
+def uc_get_scenario_status():
+    # Retrieve the scenario ID from the query parameter, if provided
+    scenario_id = request.args.get('id')
+
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+
+    if scenario_id:
+        # SQL query to get the status of a specific scenario by ID
+        c.execute("""
+            SELECT 
+                uc_scenario_status.id, 
+                uc_scenario_status.server_ip, 
+                uc_config.server_port, 
+                uc_config.server_name, 
+                uc_scenario_status.project_id, 
+                uc_projects.project_name, 
+                uc_scenario_status.scenario_id, 
+                uc_scenario_status.status, 
+                uc_scenario_status.process_id 
+            FROM 
+                uc_scenario_status 
+            JOIN 
+                uc_projects ON uc_scenario_status.project_id = uc_projects.project_id 
+            JOIN 
+                uc_config ON uc_scenario_status.server_ip = uc_config.server_ip
+            WHERE 
+                uc_scenario_status.id = ?
+        """, (scenario_id,))
+
+        row = c.fetchone()
+
+        if row:
+            data = {
+                'id': row [0], 'server_ip': row [1], 'server_port': row [2], 'server_name': row [3],
+                'project_id': row [4], 'project_name': row [5], 'scenario_id': row [6], 'status': row [7],
+                'process_id': row [8]
+            }
+            return jsonify({'scenario_status': data})
+        else:
+            return jsonify({'message': 'Scenario not found'}), 404
+    else:
+        # SQL query to get the status of all scenarios if no ID is provided
+        c.execute("""
+            SELECT 
+                uc_scenario_status.id, 
+                uc_scenario_status.server_ip, 
+                uc_config.server_port, 
+                uc_config.server_name, 
+                uc_scenario_status.project_id, 
+                uc_projects.project_name, 
+                uc_scenario_status.scenario_id, 
+                uc_scenario_status.status, 
+                uc_scenario_status.process_id 
+            FROM 
+                uc_scenario_status 
+            JOIN 
+                uc_projects ON uc_scenario_status.project_id = uc_projects.project_id 
+            JOIN 
+                uc_config ON uc_scenario_status.server_ip = uc_config.server_ip
+        """)
+
+        rows = c.fetchall()
+        data = [{
+            'id': row [0], 'server_ip': row [1], 'server_port': row [2], 'server_name': row [3], 'project_id': row [4],
+            'project_name': row [5], 'scenario_id': row [6], 'status': row [7], 'process_id': row [8]
+        } for row in rows]
+
+        return jsonify({'scenario_status': data})
 
 @app.route('/api/tasks/<int:scenario_id>', methods=['POST'])
 def uc_create_task(scenario_id):
