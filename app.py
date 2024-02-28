@@ -30,10 +30,6 @@ def use_case_remote():
 def use_case_scenarios_page():
     return render_template('use_case/uc_scenarios.html')
 
-@app.route('/admin')
-def adminPage():
-    return render_template('admin.html')
-
 # endregion
 # region Use Case
 @app.route('/api/uc_config', methods=['POST'])
