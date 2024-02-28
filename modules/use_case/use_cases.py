@@ -41,16 +41,11 @@ def use_case_2(server, port, project_id, state):
         return {'message': 'Scenario stopped successfully.'}, 200
 
 def use_case_3_old(server, port, project_id, state):
-    remote_node_name = 'Miami-Client'
+    remote_node_name = 'Miami-Client-2'
     nodes = gns3_query_get_nodes(server, port, project_id)
     remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
-    client_command = f'python3 /home/torrent_use_case.py 6881'
+    client_command = f'python3 /home/torrent_client.py'
     gns3_run_telnet_command(server, port, project_id, remote_node_id, remote_node_console, state, client_command)
-    remote_node_name = 'Miami-Client'
-    nodes = gns3_query_get_nodes(server, port, project_id)
-    remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
-    client_command = f'python3 /home/torrent_use_case.py 6882'
-    gns3_run_telnet_command(server, port, project_id, remote_node_id, remote_node_aux, state, client_command)
 
     return {'message': 'Scenario started successfully.'}, 200
 
@@ -58,8 +53,23 @@ def use_case_3(server, port, project_id, state):
     remote_node_name = 'Miami-Client-2'
     nodes = gns3_query_get_nodes(server, port, project_id)
     remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
-    client_command = f'python3 /home/torrent_client.py'
-    gns3_run_telnet_command(server, port, project_id, remote_node_id, remote_node_console, state, client_command)
+
+    config_commands_start = ["python3 /home/torrent_client.py"]
+
+    tn = telnetlib.Telnet(server, remote_node_aux, timeout=1)
+
+    tn.write(b"\n")
+
+    time.sleep(2)
+    if state == "on":
+        for command in config_commands_start:
+            client_command = command
+            tn.write(b"\r\n")
+            tn.write(client_command.encode("ascii") + b"\n")
+            time.sleep(.5)
+
+    elif state == "off":
+        tn.write(b"\x03")
 
     return {'message': 'Scenario started successfully.'}, 200
 
