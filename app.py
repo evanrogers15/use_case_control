@@ -435,16 +435,13 @@ def uc_run_script():
     # Get the script path, arguments, project ID, and scenario ID from the request
     data = request.get_json()
     script_path = data.get('script_path')
-    args = data.get('args', [])
-    project_id = data.get('project_id')
-    scenario_id = data.get('scenario_id')
     # Start the script as a subprocess and store the Popen object
     try:
-        proc = subprocess.Popen(['python', script_path] + args)
+        proc = subprocess.Popen(['python', script_path])
         pid = proc.pid
         processes[pid] = proc
         # Return the process information in the response
-        return jsonify({'pid': pid, 'project_id': project_id, 'scenario_id': scenario_id}), 200
+        return jsonify({'pid': pid}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
