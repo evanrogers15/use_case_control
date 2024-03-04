@@ -1,6 +1,7 @@
 import requests
 import telnetlib
 import argparse
+import time
 
 def list_projects(server, port):
     response = requests.get(f"http://{server}:{port}/v2/projects")
@@ -19,6 +20,7 @@ def run_telnet_command(host, port, command):
     tn.write(command.encode('ascii') + b"\n")
     output = tn.read_until(b"#", timeout=5).decode('ascii')
     tn.write(b"\n")
+    time.sleep(.5)
     tn.close()
     return output
 

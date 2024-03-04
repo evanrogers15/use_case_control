@@ -24,7 +24,6 @@ def main():
         "python3 bandwidth_utility.py 192.168.122.1 80 multivendor-sdwan add isp-atlanta",
         "python3 bandwidth_utility.py 192.168.122.1 80 multivendor-sdwan add isp-miami",
         "python3 bandwidth_utility.py 192.168.122.1 80 multivendor-sdwan add isp-chicago",
-        "python3 bandwidth_utility.py 192.168.122.1 80 multivendor-sdwan add isp-houston",
         "python3 start_nodes_utility.py 192.168.122.1 80 multivendor-sdwan start ISP_Router",
         "python3 isp_route_utility.py 192.168.122.1 80 multivendor-sdwan ISP_Router",
         "python3 start_nodes_utility.py 192.168.122.1 80 multivendor-sdwan start vk35,vManage,vBond,vSmart,vEdge",
