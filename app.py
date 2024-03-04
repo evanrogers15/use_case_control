@@ -30,6 +30,10 @@ def use_case_remote():
 def use_case_scenarios_page():
     return render_template('use_case/uc_scenarios.html')
 
+@app.route('/lab-control')
+def lab_control():
+    return render_template('use_case/lab_control.html')
+
 # endregion
 # region Use Case
 @app.route('/api/uc_config', methods=['POST'])
