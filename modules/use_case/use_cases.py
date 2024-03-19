@@ -31,7 +31,7 @@ def use_case_2(server, port, project_id, state):
     router_node_id, router_console, router_aux = gns3_query_find_node_by_name(nodes, router_node_name)
     remote_node_id_1, remote_node_console_1, remote_node_aux_1 = gns3_query_find_node_by_name(nodes, remote_node_name)
 
-    links = gns3_query_get_links(server, port, project_id, router_node_id)
+    links = gns3_query_get_links(server, port, project_id, remote_node_id_1)
     link_id = gns3_query_get_node_links(nodes, links, server, port, project_id, remote_node_id_1, router_node_id, 'eth2')
     if state == 'on':
         gns3_set_suspend(server, port, project_id, link_id)
