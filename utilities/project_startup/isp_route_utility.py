@@ -1,7 +1,6 @@
 import requests
 import telnetlib
 import argparse
-import time
 
 def list_projects(server, port):
     response = requests.get(f"http://{server}:{port}/v2/projects")
@@ -20,7 +19,6 @@ def run_telnet_command(host, port, command):
     tn.write(command.encode('ascii') + b"\n")
     output = tn.read_until(b"#", timeout=5).decode('ascii')
     tn.write(b"\n")
-    time.sleep(.5)
     tn.close()
     return output
 
@@ -36,6 +34,13 @@ def main(args):
     command_2 = f"ip route add 172.16.7.0/24 via 172.16.254.2"
     command_3 = f"ip route add 172.16.8.0/24 via 172.16.254.2"
     command_4 = f"ip route add 172.16.9.0/24 via 172.16.254.2"
+    command_5 = f"ip route add 23.24.0.0/29 via 172.16.254.2"
+    command_6 = f"ip route add 23.30.0.0/29 via 172.16.254.2"
+    command_7 = f"ip route add 104.159.128.0/29 via 172.16.254.2"
+    command_8 = f"ip route add 63.80.168.0/29 via 172.16.254.2"
+    command_9 = f"ip route add 66.62.132.0/29 via 172.16.254.2"
+    command_10 = f"ip route add 207.79.9.0/29 via 172.16.254.2"
+
 
     nodes = list_nodes(args.server, args.port, project_id)
     filtered_nodes = [node for node in nodes if args.node_name_portion in node['name']]
@@ -46,6 +51,12 @@ def main(args):
         output = run_telnet_command(args.server, console_port, command_2)
         output = run_telnet_command(args.server, console_port, command_3)
         output = run_telnet_command(args.server, console_port, command_4)
+        output = run_telnet_command(args.server, console_port, command_5)
+        output = run_telnet_command(args.server, console_port, command_6)
+        output = run_telnet_command(args.server, console_port, command_7)
+        output = run_telnet_command(args.server, console_port, command_8)
+        output = run_telnet_command(args.server, console_port, command_9)
+        output = run_telnet_command(args.server, console_port, command_10)
         print(f"Output for {node['name']}:\n{output}")
 
 if __name__ == "__main__":
