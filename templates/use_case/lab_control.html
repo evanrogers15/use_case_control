@@ -57,6 +57,7 @@ button:last-child {
 
   <button onclick="startLab()">Start Lab</button>
   <button onclick="refreshDockerComponents()">Refresh Docker Components</button>
+  <button onclick="versaRefresh()">Refresh Versa Director</button>
 </div>
 
 <script>
@@ -69,7 +70,7 @@ function refreshDockerComponents() {
 }
 
 function versaRefresh() {
-  callApi('/app/test.py');
+  callApi('/app/utilities/versa_refresh_standalone.py');
 }
 
 function callApi(scriptPath) {
