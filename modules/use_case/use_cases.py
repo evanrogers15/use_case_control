@@ -197,7 +197,22 @@ def use_case_5(server, port, project_id, state):
             time.sleep(.5)
         tn.close()
         tn = telnetlib.Telnet(server, mp_node_console, timeout=1)
+        while True:
+            tn.write(b"\r\n")
+            output = tn.read_until(b"login:", timeout=2).decode('ascii')
+            if 'admin@vk35-Chicago-AppNeta:~$' in output:
+                break
+            tn.write(appN_username.encode("ascii") + b"\n")
+            tn.read_until(b"Password:", timeout=5)
+            tn.write(appN_pass.encode("ascii") + b"\n")
+            output = tn.read_until(b"Password:", timeout=5).decode('utf-8')
+            if 'admin@vk35-Chicago-AppNeta:~$' in output:
+                break
+            log_and_update_db(server_name, project_name, deployment_type, deployment_status, deployment_step,
+                              f"{temp_node_name} not available yet, trying again in 30 seconds")
+            time.sleep(30)
         tn.write(b"\r\n")
+        time.sleep(1)
         tn.write(appN_command.encode("ascii") + b"\n")
         tn.close()
 
