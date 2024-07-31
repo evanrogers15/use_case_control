@@ -154,8 +154,7 @@ def use_case_5(server, port, project_id, state):
 
     config_commands_stop = ["bash", "cd /etc/frr", "python3 bandwidth_adjuster.py remove eth0", "exit"]
 
-    appN_command = [
-        "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d {} 'https://127.0.0.1/api/v1/service/networking/?action=restart'"]
+    appN_command = "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d '{}' 'https://127.0.0.1/api/v1/service/networking/?action=restart'"
 
     tn = telnetlib.Telnet(server, remote_node_aux, timeout=1)
 
