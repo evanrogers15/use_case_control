@@ -161,7 +161,6 @@ def use_case_5(server, port, project_id, state):
 
 
     tn.write(b"\n")
-    tn_appN.write(b"\n")
 
     time.sleep(2)
     if state == "on":
