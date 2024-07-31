@@ -168,6 +168,7 @@ def use_case_5(server, port, project_id, state):
         tn.close()
         tn = telnetlib.Telnet(server, mp_node_console, timeout=1)
         tn.write(b"\r\n")
+        time.sleep(1)
         tn.write(appN_command.encode("ascii") + b"\n")
         tn.close()
 
