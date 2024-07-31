@@ -158,7 +158,7 @@ def use_case_5(server, port, project_id, state):
         "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d {} 'https://127.0.0.1/api/v1/service/networking/?action=restart'"]
 
     tn = telnetlib.Telnet(server, remote_node_aux, timeout=1)
-    tn_appN = telnetlib.Telnet(server, mp_node_aux, timeout=1)
+
 
     tn.write(b"\n")
     tn_appN.write(b"\n")
@@ -170,8 +170,11 @@ def use_case_5(server, port, project_id, state):
             tn.write(b"\r\n")
             tn.write(client_command.encode("ascii") + b"\n")
             time.sleep(.5)
-        tn_appN.write(b"\r\n")
-        tn_appN.write(appN_command.encode("ascii") + b"\n")
+            tn.close()
+        tn = telnetlib.Telnet(server, mp_node_aux, timeout=1)
+        tn.write(b"\r\n")
+        tn.write(appN_command.encode("ascii") + b"\n")
+        tn.close()
 
 
     elif state == "off":
@@ -180,7 +183,9 @@ def use_case_5(server, port, project_id, state):
             tn.write(b"\r\n")
             tn.write(client_command.encode("ascii") + b"\n")
             time.sleep(.5)
-        tn_appN.write(b"\r\n")
-        tn_appN.write(appN_command.encode("ascii") + b"\n")
+        tn = telnetlib.Telnet(server, mp_node_aux, timeout=1)
+        tn.write(b"\r\n")
+        tn.write(appN_command.encode("ascii") + b"\n")
+        tn.close()
 
     return {'message': 'Scenario started successfully.'}, 200
