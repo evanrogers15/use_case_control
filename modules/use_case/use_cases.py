@@ -159,9 +159,6 @@ def use_case_5(server, port, project_id, state):
 
     tn = telnetlib.Telnet(server, remote_node_aux, timeout=1)
 
-
-    tn.write(b"\n")
-
     time.sleep(2)
     if state == "on":
         for command in config_commands_start:
