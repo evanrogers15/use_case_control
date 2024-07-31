@@ -112,7 +112,7 @@ def use_case_4(server, port, project_id, state):
 
     return {'message': 'Scenario started successfully.'}, 200
 
-def use_case_5(server, port, project_id, state):
+def use_case_5_old(server, port, project_id, state):
     remote_node_name = 'isp-chicago'
     nodes = gns3_query_get_nodes(server, port, project_id)
     remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
@@ -139,5 +139,48 @@ def use_case_5(server, port, project_id, state):
             tn.write(b"\r\n")
             tn.write(client_command.encode("ascii") + b"\n")
             time.sleep(.5)
+
+    return {'message': 'Scenario started successfully.'}, 200
+
+
+def use_case_5(server, port, project_id, state):
+    remote_node_name = 'isp-chicago'
+    mp_node_name = 'vk35-Chicago-AppNeta'
+    nodes = gns3_query_get_nodes(server, port, project_id)
+    remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
+    mp_node_id, mp_node_console, mp_node_aux = gns3_query_find_node_by_name(nodes, mp_node_name)
+
+    config_commands_start = ["bash", "cd /etc/frr", "python3 bandwidth_adjuster.py add eth0 30", "exit"]
+
+    config_commands_stop = ["bash", "cd /etc/frr", "python3 bandwidth_adjuster.py remove eth0", "exit"]
+
+    appN_command = [
+        "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d {} 'https://127.0.0.1/api/v1/service/networking/?action=restart'"]
+
+    tn = telnetlib.Telnet(server, remote_node_aux, timeout=1)
+    tn_appN = telnetlib.Telnet(server, mp_node_aux, timeout=1)
+
+    tn.write(b"\n")
+    tn_appN.write(b"\n")
+
+    time.sleep(2)
+    if state == "on":
+        for command in config_commands_start:
+            client_command = command
+            tn.write(b"\r\n")
+            tn.write(client_command.encode("ascii") + b"\n")
+            time.sleep(.5)
+        tn_appN.write(b"\r\n")
+        tn_appN.write(appN_command.encode("ascii") + b"\n")
+
+
+    elif state == "off":
+        for command in config_commands_stop:
+            client_command = command
+            tn.write(b"\r\n")
+            tn.write(client_command.encode("ascii") + b"\n")
+            time.sleep(.5)
+        tn_appN.write(b"\r\n")
+        tn_appN.write(appN_command.encode("ascii") + b"\n")
 
     return {'message': 'Scenario started successfully.'}, 200
