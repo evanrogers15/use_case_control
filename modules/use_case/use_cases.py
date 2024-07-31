@@ -144,24 +144,22 @@ def use_case_5_old(server, port, project_id, state):
 
 
 def use_case_5(server, port, project_id, state):
-    remote_node_name = 'isp-chicago'
+    isp_router_node_name = 'isp-chicago'
     mp_node_name = 'vk35-Chicago-AppNeta'
     nodes = gns3_query_get_nodes(server, port, project_id)
-    remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
+    isp_router_node_id, isp_router_node_console, isp_router_node_aux = gns3_query_find_node_by_name(nodes, isp_router_node_name)
     mp_node_id, mp_node_console, mp_node_aux = gns3_query_find_node_by_name(nodes, mp_node_name)
 
     config_commands_start = ["bash", "cd /etc/frr", "python3 bandwidth_adjuster.py add eth0 30", "exit"]
-
     config_commands_stop = ["bash", "cd /etc/frr", "python3 bandwidth_adjuster.py remove eth0", "exit"]
-
     appN_command = "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d '{}' 'https://127.0.0.1/api/v1/service/networking/?action=restart'"
 
-    tn = telnetlib.Telnet(server, remote_node_aux, timeout=1)
     appN_username = 'admin'
     appN_pass = 'CAdemo@123'
 
     time.sleep(2)
     if state == "on":
+        tn = telnetlib.Telnet(server, isp_router_node_aux, timeout=1)
         for command in config_commands_start:
             client_command = command
             tn.write(b"\r\n")
@@ -188,8 +186,8 @@ def use_case_5(server, port, project_id, state):
         tn.write(appN_command.encode("ascii") + b"\n")
         tn.close()
 
-
     elif state == "off":
+        tn = telnetlib.Telnet(server, isp_router_node_aux, timeout=1)
         for command in config_commands_stop:
             client_command = command
             tn.write(b"\r\n")

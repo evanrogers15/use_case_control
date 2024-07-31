@@ -284,8 +284,9 @@ def versa_refresh(server_ip, server_port, project_name, site_count, mgmt_subnet_
     # region Create GNS3 Templates
     deployment_step = 'Creating Templates'
     log_and_update_db(server_name, project_name, deployment_type, deployment_status, deployment_step, "Starting Template Creation")
-    gns3_delete_template(gns3_server_data, versa_director_template_name)
-    versa_director_template_id = gns3_create_template(gns3_server_data, versa_director_template_data)
+    versa_director_template_id = gns3_query_get_template_id(server_ip, server_port, versa_director_template_name)
+    if versa_director_template_id is None:
+        versa_director_template_id = gns3_create_template(gns3_server_data, versa_director_template_data)
     # endregion
     # region Versa Director Backup
     deployment_step = 'Director Backup'
