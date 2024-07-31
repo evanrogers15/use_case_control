@@ -177,7 +177,7 @@ def use_case_5(server, port, project_id, state):
             tn.write(appN_username.encode("ascii") + b"\n")
             tn.read_until(b"Password:", timeout=5)
             tn.write(appN_pass.encode("ascii") + b"\n")
-            output = tn.read_until(b"Password:", timeout=5).decode('ascii')
+            output = tn.read_until(b"Password:", timeout=5).decode('utf-8')
             if 'admin@vk35-Chicago-AppNeta:~$' in output:
                 break
             log_and_update_db(server_name, project_name, deployment_type, deployment_status, deployment_step,
