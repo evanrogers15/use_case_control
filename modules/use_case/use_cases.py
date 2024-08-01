@@ -127,6 +127,8 @@ def use_case_4(server, port, project_id, state):
     config_commands_stop = ["conf t", "vpn 0", "int ge0/0", "nat", "respond-to-ping", "no block-icmp-error", "int ge0/1",
         "no nat", "commit and-quit"]
     appN_command = "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d '{}' 'https://127.0.0.1/api/v1/service/networking/?action=restart'"
+    appN_username = 'admin'
+    appN_pass = 'CAdemo@123'
 
     if state == "on":
         tn = telnetlib.Telnet(server, remote_node_console, timeout=1)
