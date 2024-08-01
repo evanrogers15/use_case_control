@@ -73,7 +73,7 @@ def use_case_3(server, port, project_id, state):
 
     return {'message': 'Scenario started successfully.'}, 200
 
-def use_case_4(server, port, project_id, state):
+def use_case_4_old(server, port, project_id, state):
     viptela_new_password = "CAdemo@123"
     viptela_username = "admin"
     remote_node_name = 'vEdge_001_Houston'
@@ -109,6 +109,95 @@ def use_case_4(server, port, project_id, state):
             tn.write(b"\r\n")
             tn.write(client_command.encode("ascii") + b"\n")
             time.sleep(.5)
+
+    return {'message': 'Scenario started successfully.'}, 200
+
+def use_case_4(server, port, project_id, state):
+    viptela_new_password = "CAdemo@123"
+    viptela_username = "admin"
+    remote_node_name = 'vEdge_001_Houston'
+    mp_node_name = 'vk35-Chicago-AppNeta'
+    nodes = gns3_query_get_nodes(server, port, project_id)
+    remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
+    mp_node_id, mp_node_console, mp_node_aux = gns3_query_find_node_by_name(nodes, mp_node_name)
+
+    config_commands_start = ["conf t", "vpn 0", "int ge0/1", "nat", "respond-to-ping", "no block-icmp-error",
+                            "int ge0/0", "no nat", "commit and-quit"]
+
+    config_commands_stop = ["conf t", "vpn 0", "int ge0/0", "nat", "respond-to-ping", "no block-icmp-error", "int ge0/1",
+        "no nat", "commit and-quit"]
+    appN_command = "curl -k -u admin:CAdemo@123 -X PUT -H 'Content-Type: application/json' -d '{}' 'https://127.0.0.1/api/v1/service/networking/?action=restart'"
+
+    if state == "on":
+        tn = telnetlib.Telnet(server, remote_node_console, timeout=1)
+        tn.write(b"\r\n")
+        output = tn.read_until(b"login:", timeout=1)
+        if b"login" in output:
+            tn.write(viptela_username.encode("ascii") + b"\n")
+            output = tn.read_until(b"Password:", timeout=3)
+            if b"Password:" in output:
+                tn.write(viptela_new_password.encode("ascii") + b"\n")
+        time.sleep(5)
+        for command in config_commands_start:
+            client_command = command
+            tn.write(b"\r\n")
+            tn.write(client_command.encode("ascii") + b"\n")
+            time.sleep(.5)
+        tn.close()
+        tn = telnetlib.Telnet(server, mp_node_console, timeout=1)
+        while True:
+            tn.write(b"\r\n")
+            output = tn.read_until(b"login:", timeout=2).decode('ascii')
+            if 'admin@vk35-Chicago-AppNeta:~$' in output:
+                break
+            tn.write(appN_username.encode("ascii") + b"\n")
+            tn.read_until(b"Password:", timeout=5)
+            tn.write(appN_pass.encode("ascii") + b"\n")
+            output = tn.read_until(b"Password:", timeout=5).decode('utf-8')
+            if 'admin@vk35-Chicago-AppNeta:~$' in output:
+                break
+            log_and_update_db(server_name, project_name, deployment_type, deployment_status, deployment_step,
+                              f"{temp_node_name} not available yet, trying again in 30 seconds")
+            time.sleep(30)
+        tn.write(b"\r\n")
+        time.sleep(1)
+        tn.write(appN_command.encode("ascii") + b"\n")
+        tn.close()
+    elif state == "off":
+        tn = telnetlib.Telnet(server, remote_node_console, timeout=1)
+        tn.write(b"\r\n")
+        output = tn.read_until(b"login:", timeout=1)
+        if b"login" in output:
+            tn.write(viptela_username.encode("ascii") + b"\n")
+            output = tn.read_until(b"Password:", timeout=3)
+            if b"Password:" in output:
+                tn.write(viptela_new_password.encode("ascii") + b"\n")
+        time.sleep(5)
+        for command in config_commands_stop:
+            client_command = command
+            tn.write(b"\r\n")
+            tn.write(client_command.encode("ascii") + b"\n")
+            time.sleep(.5)
+        tn.close()
+        tn = telnetlib.Telnet(server, mp_node_console, timeout=1)
+        while True:
+            tn.write(b"\r\n")
+            output = tn.read_until(b"login:", timeout=2).decode('ascii')
+            if 'admin@vk35-Chicago-AppNeta:~$' in output:
+                break
+            tn.write(appN_username.encode("ascii") + b"\n")
+            tn.read_until(b"Password:", timeout=5)
+            tn.write(appN_pass.encode("ascii") + b"\n")
+            output = tn.read_until(b"Password:", timeout=5).decode('utf-8')
+            if 'admin@vk35-Chicago-AppNeta:~$' in output:
+                break
+            log_and_update_db(server_name, project_name, deployment_type, deployment_status, deployment_step,
+                              f"{temp_node_name} not available yet, trying again in 30 seconds")
+            time.sleep(30)
+        tn.write(b"\r\n")
+        time.sleep(1)
+        tn.write(appN_command.encode("ascii") + b"\n")
+        tn.close()
 
     return {'message': 'Scenario started successfully.'}, 200
 
