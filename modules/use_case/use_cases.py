@@ -116,7 +116,7 @@ def use_case_4(server, port, project_id, state):
     viptela_new_password = "CAdemo@123"
     viptela_username = "admin"
     remote_node_name = 'vEdge_001_Houston'
-    mp_node_name = 'vk35-Chicago-Houston'
+    mp_node_name = 'vk35-Houston-AppNeta'
     nodes = gns3_query_get_nodes(server, port, project_id)
     remote_node_id, remote_node_console, remote_node_aux = gns3_query_find_node_by_name(nodes, remote_node_name)
     mp_node_id, mp_node_console, mp_node_aux = gns3_query_find_node_by_name(nodes, mp_node_name)
